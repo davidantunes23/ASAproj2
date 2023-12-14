@@ -27,6 +27,35 @@ class Graph {
             _adjList[v].push_back(w);
         }
 
+        void collapse(list<int> path, int newVertex) {
+            unordered_set<int> collapseList;
+            while (path.back() != newVertex) {
+                int last = path.back();
+                collapseList.insert(last);
+                for (int v : _adjList[last]) {
+                    if (v != newVertex) {
+                    _adjList[newVertex].push_back(v);
+                    }
+                }
+                path.pop_back();
+            }
+            for (int i = 1; i <= _numVertices; i++) {
+                int changed = 0;
+                for (auto it = _adjList[i].begin(); it != _adjList[i].end();) {
+                    if (collapseList.find(*it) != collapseList.end()) {
+                        it = _adjList[i].erase(it);
+                        changed = 1;
+                    }
+                    else {
+                        ++it;
+                    }
+                }
+                if (changed && i != newVertex) {
+                    _adjList[i].push_back(newVertex);
+                } 
+            }
+        }
+
         void DFS(int start) {
             unordered_set<int> visited;
             list<int> path;
@@ -55,7 +84,9 @@ class Graph {
                         else {
                             auto it = find(path.begin(), path.end(), neighbor);
                             if (it != path.end()) {
-                                printf("loop found!\n");
+                                printf("loop found in %d!\n", neighbor);
+                                collapse(path, neighbor);
+                                return;
                             }
                         }
                     }
@@ -78,6 +109,8 @@ Graph readInput() {
 
 int main() {
     Graph graph = readInput();
-    graph.DFS(3);
+    graph.DFS(4);
+    printf("novo:\n");
+    graph.DFS(4);
     return 0;
 }
