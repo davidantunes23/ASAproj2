@@ -1,5 +1,6 @@
 #include <list>
 #include <unordered_set>
+#include <algorithm>
 #include <vector>
 #include <stack>
 #include <stdio.h>
@@ -26,19 +27,36 @@ class Graph {
             _adjList[v].push_back(w);
         }
 
-        void DFS(int startVertex) {
+        void DFS(int start) {
             unordered_set<int> visited;
-            stack<int> stack;
+            list<int> path;
+            stack<Vertex> stack;
+            Vertex startVertex = {._id = start, ._parent = -1};
             stack.push(startVertex);
             while (!stack.empty()) {
-                int currentVertex = stack.top();
+                Vertex currentVertex = stack.top();
                 stack.pop();
-                if (visited.find(currentVertex) == visited.end()) {
-                    visited.insert(currentVertex);
-                    printf("Visited %d\n", currentVertex);
-                    for (int neighbor : _adjList[currentVertex]) {
+                while (currentVertex._parent != path.back() && startVertex._id != currentVertex._id) {
+                    path.pop_back();
+                }
+                if (visited.find(currentVertex._id) == visited.end()) {
+                    visited.insert(currentVertex._id);
+                    path.push_back(currentVertex._id);
+                    printf("path: ");
+                    for (int v : path) {
+                        printf("%d ", v);
+                    }
+                    printf("\n");
+                    for (int neighbor : _adjList[currentVertex._id]) {
                         if (visited.find(neighbor) == visited.end()) {
-                            stack.push(neighbor);
+                            Vertex vertex = {._id = neighbor, ._parent = currentVertex._id};
+                            stack.push(vertex);
+                        }
+                        else {
+                            auto it = find(path.begin(), path.end(), neighbor);
+                            if (it != path.end()) {
+                                printf("loop found!\n");
+                            }
                         }
                     }
                 }
