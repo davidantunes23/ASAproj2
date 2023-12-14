@@ -82,7 +82,7 @@ class Graph {
             printf("end order: ");
             while(!endOrder.empty()) {
                 printf("%d ", endOrder.top());
-                endTimes.pop();
+                endOrder.pop();
             }
             printf("\n");
         }
