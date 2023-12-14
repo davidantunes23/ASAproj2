@@ -22,22 +22,29 @@ class Graph {
             _adjList[v].push_back(w);
         }
 
-        void collapse(list<int> path, int newVertex) {
-            unordered_set<int> collapseList;
-            while (path.back() != newVertex) {
-                int last = path.back();
-                collapseList.insert(last);
-                for (int v : _adjList[last]) {
+        void collapse(unordered_set<int> SCC) {
+            int newVertex;
+            for (int i = 1; i <= _numVertices; i++) {
+                if (SCC.find(i) != SCC.end()) {
+                    newVertex = i;
+                    SCC.erase(i);
+                    break;
+                }
+            }
+            printf("Collapsing into %d: ", newVertex);
+            for (int del : SCC) {
+                printf("%d ", del);
+                for (int v : _adjList[del]) {
                     if (v != newVertex) {
-                    _adjList[newVertex].push_back(v);
+                        _adjList[newVertex].push_back(v);
                     }
                 }
-                path.pop_back();
             }
+            printf("\n");
             for (int i = 1; i <= _numVertices; i++) {
                 int changed = 0;
                 for (auto it = _adjList[i].begin(); it != _adjList[i].end();) {
-                    if (collapseList.find(*it) != collapseList.end()) {
+                    if (SCC.find(*it) != SCC.end()) {
                         it = _adjList[i].erase(it);
                         changed = 1;
                     }
@@ -54,6 +61,7 @@ class Graph {
         void DFS(int startVertex, unordered_set<int>* visited, stack<int>* endOrder) {
             stack<int> stack;
             stack.push(startVertex);
+            printf("DFS starting with %d\n", startVertex);
             while (!stack.empty()) {
                 int currentVertex = stack.top();
                 int end = 1;
@@ -82,14 +90,29 @@ class Graph {
                     DFS(startVertex, &visited, &endOrder);
                 }
             }
-            printf("end order: ");
-            while(!endOrder.empty()) {
-                printf("%d ", endOrder.top());
-                endOrder.pop();
-            }
-            printf("\n");
             return endOrder;
         }
+        
+        void makeAcyclic(stack<int> order) {
+            printf("Removing cycles...\n");
+            unordered_set<int> visited;
+            while (!order.empty()) {
+                unordered_set<int> SCC;
+                stack<int> endOrder;
+                int startVertex = order.top();
+                order.pop();
+                DFS(startVertex, &visited, &endOrder);
+                while (!endOrder.empty()) {
+                    SCC.insert(endOrder.top());
+                    endOrder.pop();
+                }
+                if (SCC.size() > 1) {
+                    collapse(SCC);
+                }
+                SCC.clear();
+            }
+        }
+        
 };
 
 Graph* graph;
@@ -111,5 +134,7 @@ void readInput() {
 int main() {
     readInput();
     stack<int> endOrder = graph->topologicalOrder();
+    transposed->makeAcyclic(endOrder);
+    transposed->topologicalOrder();
     return 0;
 }
