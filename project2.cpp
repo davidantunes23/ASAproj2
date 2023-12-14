@@ -51,27 +51,35 @@ class Graph {
             }
         }
 
-        void DFS(int startVertex) {
-            unordered_set<int> visited;
-            stack<int> endOrder;
+        void DFS(int startVertex, unordered_set<int>* visited, stack<int>* endOrder) {
             stack<int> stack;
             stack.push(startVertex);
             while (!stack.empty()) {
                 int currentVertex = stack.top();
                 int end = 1;
-                if (visited.find(currentVertex) == visited.end()) {
-                    visited.insert(currentVertex);
+                if (visited->find(currentVertex) == visited->end()) {
+                    visited->insert(currentVertex);
                     printf("Visited %d\n", currentVertex);
                     for (int neighbor : _adjList[currentVertex]) {
-                        if (visited.find(neighbor) == visited.end()) {
+                        if (visited->find(neighbor) == visited->end()) {
                             stack.push(neighbor);
                             end = 0;
                         }
                     }
                 }
                 if (end) {
-                    endOrder.push(currentVertex);
+                    endOrder->push(currentVertex);
                     stack.pop();
+                }
+            }
+        }
+
+        stack<int> topologicalOrder() {
+            unordered_set<int> visited;
+            stack<int> endOrder;
+            for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
+                if (visited.find(startVertex) == visited.end()) {
+                    DFS(startVertex, &visited, &endOrder);
                 }
             }
             printf("end order: ");
@@ -80,6 +88,7 @@ class Graph {
                 endOrder.pop();
             }
             printf("\n");
+            return endOrder;
         }
 };
 
@@ -101,7 +110,6 @@ void readInput() {
 
 int main() {
     readInput();
-    graph->DFS(4);
-    transposed->DFS(7);
+    stack<int> endOrder = graph->topologicalOrder();
     return 0;
 }
