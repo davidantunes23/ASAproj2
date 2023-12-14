@@ -7,11 +7,6 @@
 
 using namespace std;
 
-typedef struct vertex {
-    int _id;
-    int _parent;
-} Vertex;
-
 class Graph {
     private:
         int _numVertices;
@@ -88,20 +83,25 @@ class Graph {
         }
 };
 
-Graph readInput() {
+Graph* graph;
+Graph* transposed;
+
+void readInput() {
     int V, E;
     scanf("%d %d", &V, &E);
-    Graph graph(V);
+    graph = new Graph(V);
+    transposed = new Graph(V);
     for (int i = 0; i < E; i++) {
         int v, w;
         scanf("%d %d", &v, &w);
-        graph.addEdge(v, w);
+        graph->addEdge(v, w);
+        transposed->addEdge(w, v);
     }
-    return graph;
 }
 
 int main() {
-    Graph graph = readInput();
-    graph.DFS(4);
+    readInput();
+    graph->DFS(4);
+    transposed->DFS(7);
     return 0;
 }
