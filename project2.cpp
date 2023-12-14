@@ -56,42 +56,35 @@ class Graph {
             }
         }
 
-        void DFS(int start) {
+        void DFS(int startVertex) {
             unordered_set<int> visited;
-            list<int> path;
-            stack<Vertex> stack;
-            Vertex startVertex = {._id = start, ._parent = -1};
+            stack<int> endOrder;
+            stack<int> stack;
             stack.push(startVertex);
             while (!stack.empty()) {
-                Vertex currentVertex = stack.top();
-                stack.pop();
-                while (currentVertex._parent != path.back() && startVertex._id != currentVertex._id) {
-                    path.pop_back();
-                }
-                if (visited.find(currentVertex._id) == visited.end()) {
-                    visited.insert(currentVertex._id);
-                    path.push_back(currentVertex._id);
-                    printf("path: ");
-                    for (int v : path) {
-                        printf("%d ", v);
-                    }
-                    printf("\n");
-                    for (int neighbor : _adjList[currentVertex._id]) {
+                int currentVertex = stack.top();
+                int end = 1;
+                if (visited.find(currentVertex) == visited.end()) {
+                    visited.insert(currentVertex);
+                    printf("Visited %d\n", currentVertex);
+                    for (int neighbor : _adjList[currentVertex]) {
                         if (visited.find(neighbor) == visited.end()) {
-                            Vertex vertex = {._id = neighbor, ._parent = currentVertex._id};
-                            stack.push(vertex);
-                        }
-                        else {
-                            auto it = find(path.begin(), path.end(), neighbor);
-                            if (it != path.end()) {
-                                printf("loop found in %d!\n", neighbor);
-                                collapse(path, neighbor);
-                                return;
-                            }
+                            stack.push(neighbor);
+                            end = 0;
                         }
                     }
+                }
+                if (end) {
+                    endOrder.push(currentVertex);
+                    stack.pop();
                 }
             }
+            printf("end order: ");
+            while(!endOrder.empty()) {
+                printf("%d ", endOrder.top());
+                endTimes.pop();
+            }
+            printf("\n");
         }
 };
 
@@ -109,8 +102,6 @@ Graph readInput() {
 
 int main() {
     Graph graph = readInput();
-    graph.DFS(4);
-    printf("novo:\n");
     graph.DFS(4);
     return 0;
 }
