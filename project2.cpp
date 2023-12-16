@@ -4,6 +4,8 @@
 #include <stack>
 #include <stdio.h>
 
+#define max(a, b) ((a > b) ? (a) : (b))
+
 using namespace std;
 
 class Graph {
@@ -52,11 +54,9 @@ class Graph {
         }
 
         int DFS(int startVertex, unordered_set<int>* visited, stack<int>* endOrder) {
-            vector<int> parent(_numVertices+1);
             vector<int> distance(_numVertices+1);
             stack<int> stack;
             int maxJumps = 0;
-            parent[startVertex] = -1;
             distance[startVertex] = 0;
             stack.push(startVertex);
             while (!stack.empty()) {
@@ -65,9 +65,11 @@ class Graph {
                 if (visited->find(currentVertex) == visited->end()) {
                     visited->insert(currentVertex);
                     for (int neighbor : _adjList[currentVertex]) {
+                        distance[neighbor] = max(distance[currentVertex] + 1, distance[neighbor]);
+                        if (distance[neighbor] > maxJumps) {
+                            maxJumps = distance[neighbor];
+                        }
                         if (visited->find(neighbor) == visited->end()) {
-                            parent[neighbor] = currentVertex;
-                            distance[neighbor] = distance[currentVertex] + 1;
                             stack.push(neighbor);
                             end = 0;
                         }
@@ -76,9 +78,6 @@ class Graph {
                 if (end) {
                     endOrder->push(currentVertex);
                     stack.pop();
-                }
-                if (distance[currentVertex] > maxJumps) {
-                    maxJumps = distance[currentVertex];
                 }
 
             }
