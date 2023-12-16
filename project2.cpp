@@ -31,7 +31,7 @@ class Graph {
             }
             for (int del : SCC) {
                 for (int v : _adjList[del]) {
-                    if (v != newVertex) {
+                    if (v != newVertex && SCC.find(v) != SCC.end()) {
                         _adjList[newVertex].push_back(v);
                     }
                 }
@@ -39,7 +39,7 @@ class Graph {
             for (int i = 1; i <= _numVertices; i++) {
                 int changed = 0;
                 for (auto it = _adjList[i].begin(); it != _adjList[i].end();) {
-                    if (SCC.find(*it) != SCC.end()) {
+                    if (SCC.find(*it) != SCC.end() || (*it) == newVertex) {
                         it = _adjList[i].erase(it);
                         changed = 1;
                     }
@@ -47,7 +47,7 @@ class Graph {
                         ++it;
                     }
                 }
-                if (changed && i != newVertex) {
+                if (changed && i != newVertex && SCC.find(i) == SCC.end()) {
                     _adjList[i].push_back(newVertex);
                 } 
             }
