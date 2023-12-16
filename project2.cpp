@@ -7,6 +7,12 @@
 
 using namespace std;
 
+typedef struct vertex {
+    int _id;
+    int _distance;
+    struct vertex* _parent;
+} Vertex;
+
 class Graph {
     private:
         int _numVertices;
@@ -112,6 +118,36 @@ class Graph {
                 SCC.clear();
             }
         }
+
+        int computeMaxDistance(int start) {
+            int maxDistance = 0;
+            unordered_set<int> visited;
+            stack<Vertex> stack;
+            Vertex startVertex = {._id = start, ._distance = 0, ._parent = NULL};
+            stack.push(startVertex);
+            printf("Max distance from %d: ", startVertex._id);
+            while (!stack.empty()) {
+                Vertex currentVertex = stack.top();
+                stack.pop();
+                int end = 1;
+                if (visited.find(currentVertex._id) == visited.end()) {
+                    visited.insert(currentVertex._id);
+                    for (int neighbor : _adjList[currentVertex._id]) {
+                        if (visited.find(neighbor) == visited.end()) {
+                            Vertex n = {._id = neighbor, 
+                                ._distance = currentVertex._distance + 1,
+                                ._parent = &currentVertex};
+                            stack.push(n);
+                        }
+                    }
+                }
+                if (currentVertex._distance > maxDistance) {
+                    maxDistance = currentVertex._distance;
+                }
+            }
+            printf("%d\n", maxDistance);
+            return maxDistance;
+        }
         
 };
 
@@ -136,5 +172,6 @@ int main() {
     stack<int> endOrder = graph->topologicalOrder();
     transposed->makeAcyclic(endOrder);
     transposed->topologicalOrder();
+    transposed->computeMaxDistance(2);
     return 0;
 }
