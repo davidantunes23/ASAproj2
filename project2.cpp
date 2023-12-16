@@ -22,7 +22,7 @@ class Graph {
         }
 
         void collapse(unordered_set<int> SCC) {
-            int newVertex;
+            int newVertex = 0;
             for (int i = 1; i <= _numVertices; i++) {
                 if (SCC.find(i) != SCC.end()) {
                     newVertex = i;
@@ -121,7 +121,7 @@ class Graph {
         void computeMaxJumps() {
             unordered_set<int> visited, visitedTemp;
             stack<int> endOrder;
-            int maxJumps = 0, jumps;
+            int maxJumps = 0, jumps = 0;
             for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
                 if (visited.find(startVertex) == visited.end()) {
                     jumps = DFS(startVertex, &visitedTemp, &endOrder);
@@ -140,16 +140,17 @@ Graph* graph;
 Graph* transposed;
 
 void readInput() {
-    int V, E;
-    scanf("%d %d", &V, &E);
+    int V, E, dump;
+    dump = scanf("%d %d", &V, &E);
     graph = new Graph(V);
     transposed = new Graph(V);
     for (int i = 0; i < E; i++) {
         int v, w;
-        scanf("%d %d", &v, &w);
+        dump = scanf("%d %d", &v, &w);
         graph->addEdge(v, w);
         transposed->addEdge(w, v);
     }
+    (void)dump;
 }
 
 int main() {
