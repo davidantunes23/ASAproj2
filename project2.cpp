@@ -9,13 +9,10 @@ using namespace std;
 class Graph {
     private:
         int _numVertices;
-        list<int>* _adjList;
+        vector<list<int>> _adjList;
     
     public:
-        Graph(int V) {
-            _numVertices = V;
-            _adjList = new list<int>[V+1];
-        }
+        Graph(int V) : _numVertices(V), _adjList(V+1) {}
 
         void addEdge(int v, int w) {
             _adjList[v].push_back(w);
@@ -114,19 +111,18 @@ class Graph {
                 if (SCC.size() > 1) {
                     collapse(SCC);
                 }
-                SCC.clear();
             }
         }
 
         void computeMaxJumps() {
-            unordered_set<int> visited, visitedTemp;
+            unordered_set<int> visited;
             stack<int> endOrder;
             int maxJumps = 0, jumps = 0;
             for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
                 if (visited.find(startVertex) == visited.end()) {
+                    unordered_set<int> visitedTemp;
                     jumps = DFS(startVertex, &visitedTemp, &endOrder);
                     visited.insert(visitedTemp.begin(), visitedTemp.end());
-                    visitedTemp.clear();
                 }
                 if (jumps > maxJumps) {
                     maxJumps = jumps;
@@ -157,7 +153,6 @@ int main() {
     readInput();
     stack<int> endOrder = graph->topologicalOrder();
     transposed->makeAcyclic(endOrder);
-    transposed->topologicalOrder();
     transposed->computeMaxJumps();
     return 0;
 }
