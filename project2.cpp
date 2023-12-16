@@ -1,17 +1,10 @@
 #include <list>
 #include <unordered_set>
-#include <algorithm>
 #include <vector>
 #include <stack>
 #include <stdio.h>
 
 using namespace std;
-
-typedef struct vertex {
-    int _id;
-    int _distance;
-    struct vertex* _parent;
-} Vertex;
 
 class Graph {
     private:
@@ -37,16 +30,13 @@ class Graph {
                     break;
                 }
             }
-            printf("Collapsing into %d: ", newVertex);
             for (int del : SCC) {
-                printf("%d ", del);
                 for (int v : _adjList[del]) {
                     if (v != newVertex) {
                         _adjList[newVertex].push_back(v);
                     }
                 }
             }
-            printf("\n");
             for (int i = 1; i <= _numVertices; i++) {
                 int changed = 0;
                 for (auto it = _adjList[i].begin(); it != _adjList[i].end();) {
@@ -72,13 +62,11 @@ class Graph {
             parent[startVertex] = -1;
             distance[startVertex] = 0;
             stack.push(startVertex);
-            printf("DFS starting with %d\n", startVertex);
             while (!stack.empty()) {
                 int currentVertex = stack.top();
                 int end = 1;
                 if (visited->find(currentVertex) == visited->end()) {
                     visited->insert(currentVertex);
-                    printf("Visited %d\n", currentVertex);
                     for (int neighbor : _adjList[currentVertex]) {
                         if (visited->find(neighbor) == visited->end()) {
                             parent[neighbor] = currentVertex;
@@ -112,7 +100,6 @@ class Graph {
         }
         
         void makeAcyclic(stack<int> order) {
-            printf("Removing cycles...\n");
             unordered_set<int> visited;
             while (!order.empty()) {
                 unordered_set<int> SCC;
