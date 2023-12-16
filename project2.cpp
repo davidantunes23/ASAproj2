@@ -17,7 +17,7 @@ class Graph {
         void addEdge(int v, int w) {
             _adjList[v].push_back(w);
         }
-
+        
         void collapse(unordered_set<int> SCC) {
             int newVertex = 0;
             for (int i = 1; i <= _numVertices; i++) {
