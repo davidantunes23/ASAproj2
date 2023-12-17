@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include <vector>
 #include <stack>
+#include <queue>
 #include <stdio.h>
 
 #define INFINITE -1
@@ -21,9 +22,10 @@ class Graph {
             _adjList[v].insert(w);
         }
         
-        void SCC_Tarjan() {
+        vector<int> SCC_Tarjan() {
             vector<int> d(_numVertices+1, INFINITE);
             vector<int> low(_numVertices+1, -1);
+            vector<int> topologicalOrder(_numVertices);
             vector<bool> onStack(_numVertices+1, false);
             stack<int> L;
 
@@ -32,12 +34,7 @@ class Graph {
                     Tarjan_Visit(u, d, low, L, onStack);
                 }
             }
-            for (int i = 1; i <= _numVertices; i++) {
-                printf("low[%d] = %d\n", i, low[i]);
-            }
-            for (int i = 1; i <= _numVertices; i++) {
-                printf("d[%d] = %d\n", i, d[i]);
-            }
+            return low;
         }
 
         void Tarjan_Visit(int u, vector<int>& d, vector<int>& low, stack<int>& L, vector<bool>& onStack) {
@@ -64,6 +61,72 @@ class Graph {
                 onStack[poppedVertex] = false;
             }
         }
+
+        Graph makeAcyclic(vector<int> low) {
+            Graph newGraph(_numVertices);
+            for (int u = 1; u <= _numVertices; u++) {
+                for (int neighbor : _adjList[u]) {
+                    if (low[u] != low[neighbor]) {
+                        newGraph.addEdge(low[u], low[neighbor]);
+                    }
+                }
+            }
+            return newGraph;
+        }
+
+        vector<int> topologicalSort() {
+            vector<int> inDegree(_numVertices+1, 0);
+
+            // Calculate in-degrees for all vertices
+            for (int i = 1; i <= _numVertices; i++) {
+                for (int neighbor : _adjList[i]) {
+                    inDegree[neighbor]++;
+                }
+            }
+            // Queue to store vertices with in-degree 0
+            queue<int> q;
+            // Initialize the queue with vertices having in-degree 0
+            for (int i = 1; i <= _numVertices; i++) {
+                if (inDegree[i] == 0) {
+                    q.push(i);
+                }
+            }
+
+            vector<int> result;
+            while (!q.empty()) {
+                int u = q.front();
+                q.pop();
+                result.push_back(u);
+
+                // Reduce in-degree for all neighbors and enqueue if in-degree becomes 0
+                for (int neighbor : _adjList[u]) {
+                    if (--inDegree[neighbor] == 0) {
+                        q.push(neighbor);
+                    }
+                }
+            }
+            return result;
+        }
+
+        int getMaxDistance(vector<int> topologicalOrder, vector<int> low) {
+            vector<int> distance(_numVertices+1, 0);
+            int maxDistance = 0;
+            for (int i = 0; i < _numVertices; i++) {
+                int u = topologicalOrder[i];
+                for (int neighbor : _adjList[u]) {
+                    if (low[neighbor] == low[u]) {
+                        distance[neighbor] = max(distance[neighbor], distance[u]);
+                    }
+                    else {
+                        distance[neighbor] = max(distance[neighbor], distance[u]+1);
+                    }
+                    if (distance[neighbor] > maxDistance) {
+                        maxDistance = distance[neighbor];
+                    }
+                } 
+            }
+            return maxDistance;
+        }
 };
 
 Graph* graph;
@@ -82,6 +145,10 @@ void readInput() {
 
 int main() {
     readInput();
-    graph->SCC_Tarjan();
+    vector<int> low = graph->SCC_Tarjan();
+    *graph = graph->makeAcyclic(low); 
+    vector<int> topologicalOrder = graph->topologicalSort();
+    int res = graph->getMaxDistance(topologicalOrder, low);
+    printf("%d\n", res);
     return 0;
 }
