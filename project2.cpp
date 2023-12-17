@@ -4,6 +4,7 @@
 #include <stack>
 #include <stdio.h>
 
+#define INFINITE -1
 #define max(a, b) ((a > b) ? (a) : (b))
 
 using namespace std;
@@ -20,160 +21,67 @@ class Graph {
             _adjList[v].insert(w);
         }
         
-        void collapse(unordered_set<int> SCC) {
-            int newVertex = 0;
-            for (int i = 1; i <= _numVertices; i++) {
-                if (SCC.find(i) != SCC.end()) {
-                    newVertex = i;
-                    SCC.erase(i);
-                    break;
-                }
-            }
-            for (int del : SCC) {
-                for (int v : _adjList[del]) {
-                    if (v != newVertex && SCC.find(v) != SCC.end()) {
-                        _adjList[newVertex].insert(v);
-                    }
+        void SCC_Tarjan() {
+            vector<int> d(_numVertices+1, INFINITE);
+            vector<int> low(_numVertices+1, -1);
+            vector<bool> onStack(_numVertices+1, false);
+            stack<int> L;
+
+            for (int u = 1; u <= _numVertices; u++) {
+                if (d[u] == INFINITE) {
+                    Tarjan_Visit(u, d, low, L, onStack);
                 }
             }
             for (int i = 1; i <= _numVertices; i++) {
-                int changed = 0;
-                for (auto it = _adjList[i].begin(); it != _adjList[i].end();) {
-                    if (SCC.find(*it) != SCC.end() || (*it) == newVertex) {
-                        it = _adjList[i].erase(it);
-                        changed = 1;
-                    }
-                    else {
-                        ++it;
-                    }
-                }
-                if (changed && i != newVertex && SCC.find(i) == SCC.end()) {
-                    _adjList[i].insert(newVertex);
-                } 
+                printf("low[%d] = %d\n", i, low[i]);
+            }
+            for (int i = 1; i <= _numVertices; i++) {
+                printf("d[%d] = %d\n", i, d[i]);
             }
         }
 
-        int DFS(int startVertex, unordered_set<int>* visited, stack<int>* endOrder) {
-            stack<int> stack;
-            unordered_set<int> ended;
-            int maxJumps = 0;
-            stack.push(startVertex);
-            while (!stack.empty()) {
-                int currentVertex = stack.top();
-                int end = 1;
-                if (visited->find(currentVertex) == visited->end()) {
-                    visited->insert(currentVertex);
-                    for (int neighbor : _adjList[currentVertex]) {
-                        if (visited->find(neighbor) == visited->end()) {
-                            stack.push(neighbor);
-                            end = 0;
-                        }
-                    }
+        void Tarjan_Visit(int u, vector<int>& d, vector<int>& low, stack<int>& L, vector<bool>& onStack) {
+            static int visited = 0;
+            d[u] = low[u] = ++visited;
+            L.push(u);
+            onStack[u] = true;
+            for (int v : _adjList[u]) {
+                if (d[v] == INFINITE) {
+                    Tarjan_Visit(v, d, low, L, onStack);
+                    low[u] = min(low[u], low[v]);
                 }
-                if (end && ended.find(currentVertex) == ended.end()) {
-                    ended.insert(currentVertex);
-                    endOrder->push(currentVertex);
-                    stack.pop();
-                }
-                else if (end) {
-                    stack.pop();
-                }
-
-            }
-            return maxJumps;
-        }
-
-        int getMaxJumps(int startVertex, unordered_set<int>* visited) {
-            vector<int> distance(_numVertices+1);
-            stack<int> stack;
-            unordered_set<int> ended;
-            int maxJumps = 0;
-            distance[startVertex] = 0;
-            stack.push(startVertex);
-            while (!stack.empty()) {
-                int currentVertex = stack.top();
-                stack.pop();
-                if (visited->find(currentVertex) == visited->end()) {
-                    visited->insert(currentVertex);
-                }
-                for (int neighbor : _adjList[currentVertex]) {
-                    distance[neighbor] = max(distance[currentVertex] + 1, distance[neighbor]);
-                    if (distance[neighbor] > maxJumps) {
-                        maxJumps = distance[neighbor];
-                    }
-                    stack.push(neighbor);
+                else if (onStack[v]) {
+                    low[u] = min(low[u], low[v]);
                 }
             }
-            return maxJumps;
-        }
-
-        stack<int> topologicalOrder() {
-            unordered_set<int> visited;
-            stack<int> endOrder;
-            for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
-                if (visited.find(startVertex) == visited.end()) {
-                    DFS(startVertex, &visited, &endOrder);
+            if (d[u] == low[u]) {
+                while (L.top() != u) {
+                    int poppedVertex = L.top();
+                    L.pop();
+                    onStack[poppedVertex] = false;
                 }
+                int poppedVertex = L.top();
+                onStack[poppedVertex] = false;
             }
-            return endOrder;
-        }
-        
-        void makeAcyclic(stack<int> order) {
-            unordered_set<int> visited;
-            while (!order.empty()) {
-                unordered_set<int> SCC;
-                stack<int> endOrder;
-                int startVertex = order.top();
-                order.pop();
-                DFS(startVertex, &visited, &endOrder);
-                while (!endOrder.empty()) {
-                    SCC.insert(endOrder.top());
-                    endOrder.pop();
-                }
-                if (SCC.size() > 1) {
-                    collapse(SCC);
-                }
-            }
-        }
-
-        void computeMaxJumps() {
-            unordered_set<int> visited;
-            int maxJumps = 0, jumps = 0;
-            for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
-                if (visited.find(startVertex) == visited.end()) {
-                    unordered_set<int> visitedTemp;
-                    jumps = getMaxJumps(startVertex, &visitedTemp);
-                    visited.insert(visitedTemp.begin(), visitedTemp.end());
-                }
-                if (jumps > maxJumps) {
-                    maxJumps = jumps;
-                }
-            }
-            printf("%d\n", maxJumps);
         }
 };
 
 Graph* graph;
-Graph* transposed;
 
 void readInput() {
     int V, E, dump;
     dump = scanf("%d %d", &V, &E);
     graph = new Graph(V);
-    transposed = new Graph(V);
     for (int i = 0; i < E; i++) {
         int v, w;
         dump = scanf("%d %d", &v, &w);
         graph->addEdge(v, w);
-        transposed->addEdge(w, v);
     }
     (void)dump;
 }
 
 int main() {
     readInput();
-    stack<int> endOrder = graph->topologicalOrder();
-    transposed->makeAcyclic(endOrder);
-    transposed->computeMaxJumps();
+    graph->SCC_Tarjan();
     return 0;
 }
