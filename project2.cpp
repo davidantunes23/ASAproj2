@@ -108,7 +108,7 @@ class Graph {
             return result;
         }
 
-        int getMaxDistance(vector<int> topologicalOrder, vector<int> low) {
+        int getMaxDistance(vector<int> topologicalOrder) {
             vector<int> distance(_numVertices+1, 0);
             int maxDistance = 0;
             for (int i = 0; i < _numVertices; i++) {
@@ -141,17 +141,9 @@ void readInput() {
 int main() {
     readInput();
     vector<int> low = graph->SCC_Tarjan();
-    for (int v : low) {
-        printf("%d ", v);
-    }
-    printf("\n");
     *graph = graph->makeAcyclic(low); 
     vector<int> topologicalOrder = graph->topologicalSort();
-    for (int v : topologicalOrder) {
-        printf("%d ", v);
-    }
-    printf("\n");
-    int res = graph->getMaxDistance(topologicalOrder, low);
+    int res = graph->getMaxDistance(topologicalOrder);
     printf("%d\n", res);
     return 0;
 }
