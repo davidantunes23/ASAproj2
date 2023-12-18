@@ -13,13 +13,13 @@ using namespace std;
 class Graph {
     private:
         int _numVertices;
-        vector<unordered_set<int>> _adjList;
+        vector<vector<int>> _adjList;
     
     public:
         Graph(int V) : _numVertices(V), _adjList(V+1) {}
 
         void addEdge(int v, int w) {
-            _adjList[v].insert(w);
+            _adjList[v].push_back(w);
         }
         
         vector<int> SCC_Tarjan() {
@@ -28,7 +28,7 @@ class Graph {
             vector<int> topologicalOrder(_numVertices);
             vector<bool> onStack(_numVertices+1, false);
             stack<int> L;
-
+            
             for (int u = 1; u <= _numVertices; u++) {
                 if (d[u] == INFINITE) {
                     Tarjan_Visit(u, d, low, L, onStack);
