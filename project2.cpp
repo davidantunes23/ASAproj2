@@ -96,12 +96,10 @@ class Graph {
             return newGraph;
         }
 
-        int getMaxDistance(stack<int> topologicalOrder) {
+        int getMaxDistance() {
             vector<int> distance(_numVertices+1, 0);
             int maxDistance = 0;
-            while (!topologicalOrder.empty()) {
-                int u = topologicalOrder.top();
-                topologicalOrder.pop();
+            for (int u = _numVertices; u >= 0; u--) {
                 for (int neighbor : _adjList[u]) {
                     distance[neighbor] = max(distance[neighbor], distance[u]+1);
                     if (distance[neighbor] > maxDistance) {
@@ -135,8 +133,7 @@ int main() {
     readInput();
     stack<int> topologicalOrder = graph->topologicalSort();
     Graph newGraph = transpose->findSCC(topologicalOrder);
-    topologicalOrder = newGraph.topologicalSort();
-    int res = newGraph.getMaxDistance(topologicalOrder);
+    int res = newGraph.getMaxDistance();
     printf("%d\n", res);
     return 0;
 }
