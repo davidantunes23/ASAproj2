@@ -25,38 +25,42 @@ class Graph {
         vector<int> SCC_Tarjan() {
             vector<int> d(_numVertices+1, INFINITE);
             vector<int> low(_numVertices+1, -1);
+            vector<bool> visited(_numVertices+1, false);
             int time = 1;
             
             for (int u = 1; u <= _numVertices; u++) {
-                stack<int> stack;
-                vector<bool> onStack(_numVertices+1, false);
-                stack.push(u);
-                onStack[u] = true;
-                while (!stack.empty()) {
-                    bool end = true;
-                    int currentVertex = stack.top();
-                    if (d[currentVertex] == INFINITE) {
-                        d[currentVertex] = time;
-                        low[currentVertex] = time;
-                        time++;
-                    }
-                    for (int neighbor : _adjList[currentVertex]) {
-                        if (d[neighbor] == INFINITE) {
-                            end = false;
-                            stack.push(neighbor);
-                            onStack[neighbor] = true;
-                            break;
+                if (!visited[u]) {
+                    vector<bool> onPath(_numVertices+1, false);
+                    stack<int> stack;
+                    stack.push(u);
+                    while (!stack.empty()) {
+                        int end = true;
+                        int currentVertex = stack.top();
+                        visited[currentVertex] = true;
+                        onPath[currentVertex] = true;
+                        if (d[currentVertex] == INFINITE) {
+                            d[currentVertex] = time;
+                            low[currentVertex] = time;
+                            time++;
                         }
-                        else if (low[currentVertex] > low[neighbor] && onStack[neighbor]){
-                            while (low[stack.top()] != low[neighbor]) {
-                                low[stack.top()] = low[neighbor];
-                                stack.pop();
+                        for (int neighbor : _adjList[currentVertex]) {
+                            if (d[neighbor] == INFINITE) {
+                                end = false;
+                                stack.push(neighbor);
+                            }
+                            else if (low[currentVertex] > low[neighbor] && onPath[neighbor]){
+                                end = false;
+                                while (low[stack.top()] != low[neighbor]) {
+                                    low[stack.top()] = low[neighbor];
+                                    onPath[stack.top()] = false;
+                                    stack.pop();
+                                }
                             }
                         }
-                    }
-                    if (end) {
-                        stack.pop();
-                        onStack[currentVertex] = false;
+                        if (end) {
+                            stack.pop();
+                            onPath[currentVertex] = false;
+                        }
                     }
                 }
             }
