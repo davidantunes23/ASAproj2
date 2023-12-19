@@ -1,12 +1,8 @@
-#include <list>
-#include <unordered_set>
 #include <vector>
 #include <stack>
-#include <queue>
 #include <stdio.h>
 
 #define INFINITE -1
-#define max(a, b) ((a > b) ? (a) : (b))
 
 using namespace std;
 
@@ -30,20 +26,21 @@ class Graph {
             while (!stack.empty()) {
                 int end = true;
                 currentVertex = stack.top();
-                visited[currentVertex] = true;
-                for (int neighbor : _adjList[currentVertex]) {
-                    if (!visited[neighbor]) {
-                        end = false;
-                        stack.push(neighbor);
+                if (!finished[currentVertex]) {
+                    visited[currentVertex] = true;
+                    for (int neighbor : _adjList[currentVertex]) {
+                        if (!visited[neighbor]) {
+                            end = false;
+                            stack.push(neighbor);
+                        }
                     }
-                }
-                if (end) {
-                    if (!finished[currentVertex]) {
+                    if (end) {
                         endOrder->push(currentVertex);
                         finished[currentVertex] = true;
+                        stack.pop();
                     }
-                    stack.pop();
                 }
+                else stack.pop();
             }
         }
 
@@ -75,7 +72,6 @@ class Graph {
             vector<int> newVertex(_numVertices+1, -1);
             int newNumVertices = 0;
             while (!topologicalOrder.empty()) {
-                vector<int> SCC;
                 stack<int> endOrder;
                 int startVertex = topologicalOrder.top();
                 topologicalOrder.pop();
