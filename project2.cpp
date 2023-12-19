@@ -21,87 +21,99 @@ class Graph {
         void addEdge(int v, int w) {
             _adjList[v].push_back(w);
         }
-
-        void DFS(int startVertex, vector<bool>& visited, stack<int>* endOrder) {
-            stack<int> stack;
-            vector<bool> onStack(_numVertices, false);
-            int currentVertex;
-            stack.push(startVertex);
-            onStack[startVertex] = true;
-            while (!stack.empty()) {
-                int finished = true;
-                currentVertex = stack.top();
-                visited[currentVertex] = true;
-                for (int neighbor : _adjList[currentVertex]) {
-                    if (!onStack[neighbor] && !visited[neighbor]) {
-                        finished = false;
-                        stack.push(neighbor);
-                        onStack[neighbor] = true;
+        
+        vector<int> SCC_Tarjan() {
+            vector<int> d(_numVertices+1, INFINITE);
+            vector<int> low(_numVertices+1, -1);
+            int time = 1;
+            
+            for (int u = 1; u <= _numVertices; u++) {
+                stack<int> stack;
+                vector<bool> onStack(_numVertices+1, false);
+                stack.push(u);
+                onStack[u] = true;
+                while (!stack.empty()) {
+                    bool end = true;
+                    int currentVertex = stack.top();
+                    if (d[currentVertex] == INFINITE) {
+                        d[currentVertex] = time;
+                        low[currentVertex] = time;
+                        time++;
+                    }
+                    for (int neighbor : _adjList[currentVertex]) {
+                        if (d[neighbor] == INFINITE) {
+                            end = false;
+                            stack.push(neighbor);
+                            onStack[neighbor] = true;
+                            break;
+                        }
+                        else if (low[currentVertex] > low[neighbor] && onStack[neighbor]){
+                            while (low[stack.top()] != low[neighbor]) {
+                                low[stack.top()] = low[neighbor];
+                                stack.pop();
+                            }
+                        }
+                    }
+                    if (end) {
+                        stack.pop();
+                        onStack[currentVertex] = false;
                     }
                 }
-                if (finished) {
-                    endOrder->push(currentVertex);
-                    stack.pop();
-                    onStack[currentVertex] = false;
-                }
             }
+            return low;
         }
 
-        stack<int> topologicalSort() {
-            vector<bool> visited(_numVertices+1, false);
-            stack<int> endOrder;
-            for (int startVertex = 1; startVertex <= _numVertices; startVertex++) {
-                if (!visited[startVertex]) {
-                    DFS(startVertex, visited, &endOrder);
-                }
-            }
-            return endOrder;
-        }
-
-        Graph buildDAG(vector<int> newVertex, int numVert) {
-            Graph newGraph(numVert);
+        Graph makeAcyclic(vector<int> low) {
+            Graph newGraph(_numVertices);
             for (int u = 1; u <= _numVertices; u++) {
                 for (int neighbor : _adjList[u]) {
-                    if (newVertex[u] != newVertex[neighbor]) {
-                        newGraph.addEdge(newVertex[u], newVertex[neighbor]);
+                    if (low[u] != low[neighbor]) {
+                        newGraph.addEdge(low[u], low[neighbor]);
                     }
                 }
             }
             return newGraph;
         }
 
-        Graph findSCC(stack<int> topologicalOrder) {
-            vector<bool> visited(_numVertices+1);
-            vector<int> newVertex(_numVertices+1, -1);
-            int newNumVertices = 0;
-            while (!topologicalOrder.empty()) {
-                vector<int> SCC;
-                stack<int> endOrder;
-                int startVertex = topologicalOrder.top();
-                topologicalOrder.pop();
-                DFS(startVertex, visited, &endOrder);
-                bool newSCC = false;
-                while (!endOrder.empty()) {
-                    if (newVertex[endOrder.top()] == -1) {
-                        newSCC = true;
-                        newVertex[endOrder.top()] = newNumVertices;
-                    }
-                    endOrder.pop();
-                }
-                if (newSCC) {
-                    newNumVertices++;
+        vector<int> topologicalSort() {
+            vector<int> inDegree(_numVertices+1, 0);
+
+            // Calculate in-degrees for all vertices
+            for (int i = 1; i <= _numVertices; i++) {
+                for (int neighbor : _adjList[i]) {
+                    inDegree[neighbor]++;
                 }
             }
-            Graph newGraph = buildDAG(newVertex, newNumVertices - 1);
-            return newGraph;
+            // Queue to store vertices with in-degree 0
+            queue<int> q;
+            // Initialize the queue with vertices having in-degree 0
+            for (int i = 1; i <= _numVertices; i++) {
+                if (inDegree[i] == 0) {
+                    q.push(i);
+                }
+            }
+
+            vector<int> result;
+            while (!q.empty()) {
+                int u = q.front();
+                q.pop();
+                result.push_back(u);
+
+                // Reduce in-degree for all neighbors and enqueue if in-degree becomes 0
+                for (int neighbor : _adjList[u]) {
+                    if (--inDegree[neighbor] == 0) {
+                        q.push(neighbor);
+                    }
+                }
+            }
+            return result;
         }
 
-        int getMaxDistance(stack<int> topologicalOrder) {
+        int getMaxDistance(vector<int> topologicalOrder) {
             vector<int> distance(_numVertices+1, 0);
             int maxDistance = 0;
-            while (!topologicalOrder.empty()) {
-                int u = topologicalOrder.top();
-                topologicalOrder.pop();
+            for (int i = 0; i < _numVertices; i++) {
+                int u = topologicalOrder[i];
                 for (int neighbor : _adjList[u]) {
                     distance[neighbor] = max(distance[neighbor], distance[u]+1);
                     if (distance[neighbor] > maxDistance) {
@@ -111,32 +123,28 @@ class Graph {
             }
             return maxDistance;
         }
-
 };
 
 Graph* graph;
-Graph* transpose;
 
 void readInput() {
     int V, E, dump;
     dump = scanf("%d %d", &V, &E);
     graph = new Graph(V);
-    transpose = new Graph(V);
     for (int i = 0; i < E; i++) {
         int v, w;
         dump = scanf("%d %d", &v, &w);
         graph->addEdge(v, w);
-        transpose->addEdge(w, v);
     }
     (void)dump;
 }
 
 int main() {
     readInput();
-    stack<int> topologicalOrder = graph->topologicalSort();
-    Graph newGraph = transpose->findSCC(topologicalOrder);
-    topologicalOrder = newGraph.topologicalSort();
-    int res = newGraph.getMaxDistance(topologicalOrder);
+    vector<int> low = graph->SCC_Tarjan();
+    *graph = graph->makeAcyclic(low); 
+    vector<int> topologicalOrder = graph->topologicalSort();
+    int res = graph->getMaxDistance(topologicalOrder);
     printf("%d\n", res);
     return 0;
 }
