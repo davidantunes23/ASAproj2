@@ -75,17 +75,19 @@ class Graph {
                 stack<int> endOrder;
                 int startVertex = topologicalOrder.top();
                 topologicalOrder.pop();
-                DFS(startVertex, visited, &endOrder);
-                bool newSCC = false;
-                while (!endOrder.empty()) {
-                    if (newVertex[endOrder.top()] == -1) {
-                        newSCC = true;
-                        newVertex[endOrder.top()] = newNumVertices;
+                if (!visited[startVertex]) {
+                    DFS(startVertex, visited, &endOrder);
+                    bool newSCC = false;
+                    while (!endOrder.empty()) {
+                        if (newVertex[endOrder.top()] == -1) {
+                            newSCC = true;
+                            newVertex[endOrder.top()] = newNumVertices;
+                        }
+                        endOrder.pop();
                     }
-                    endOrder.pop();
-                }
-                if (newSCC) {
-                    newNumVertices++;
+                    if (newSCC) {
+                        newNumVertices++;
+                    }
                 }
             }
             Graph newGraph = buildDAG(newVertex, newNumVertices - 1);
